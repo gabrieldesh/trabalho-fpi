@@ -1,25 +1,33 @@
-function P = interpolation(I, x, y, method)
+function Interpolated = interpolation(Image, x, y, method)
   switch lower(method)
       case 'replication'
-          interp_function = @interpolation_replication;
+          interpolation_function = @interpolation_replication;
       case 'bilinear'
-          interp_function = @interpolation_bilinear;
+          interpolation_function = @interpolation_bilinear;
+      case 'bicubic'
+          interpolation_function = @interpolation_bicubic;
       otherwise
           error("Unknown interpolation method " + method + ".")
   end
   
-  [N, M, numChannels] = size(I);
+  [num_lines, num_columns, num_channels] = size(Image);
   
-  function Q = F(y, x, c)
-      if x >= 1 && x <= M && y >= 1 && y <= N
-          Q = I(y, x, c);
+  % Retorna o valor na posição y, x, channel da imagem. Se as coordenadas
+  % não estão contidas na imagem, retorna 0.
+  function P = Image_extended(y, x, channel)
+      if x >= 1 && x <= num_columns ...
+      && y >= 1 && y <= num_lines
+          P = Image(y, x, channel);
       else
-          Q = 0;
+          P = 0;
       end
   end
 
-  P = zeros(1, 1, numChannels);
-  for c = 1:numChannels
-      P(c) = interp_function(@F, x, y, c);
+  Interpolated = zeros(1, 1, num_channels);
+  
+  % Interpola cada canal separadamente.
+  for channel = 1 : num_channels
+      Interpolated(channel) = ...
+          interpolation_function(@Image_extended, x, y, channel);
   end
 end
